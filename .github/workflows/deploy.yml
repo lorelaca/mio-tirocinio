@@ -1,0 +1,40 @@
+name: 🚀 Deploy su GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:   # permette di avviare manualmente dal tab Actions
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Evita deploy paralleli in conflitto
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: 📥 Checkout codice
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Configura GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: 📦 Carica artefatto
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'   # carica tutto il repo (index.html è nella root)
+
+      - name: 🌐 Deploy su GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

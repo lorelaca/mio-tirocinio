@@ -874,6 +874,7 @@
 
         async function generateCartellinoDocx() {
             if(!appState.config.startDate) { alert("Configura prima il periodo (Config.)."); return; }
+            if(!appState.config.academicYear) { alert("Anno Accademico non impostato.\n\nVai in Config. → campo \"Anno Accademico\" → inserisci es. \"2024/2025\" → Applica."); return; }
             if(typeof JSZip === 'undefined') { alert("Libreria JSZip non caricata. Controlla la connessione."); return; }
 
             const dates = getDatesInRange(appState.config.startDate, appState.config.endDate);

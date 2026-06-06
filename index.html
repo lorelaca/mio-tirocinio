@@ -254,7 +254,7 @@
     <!-- Other Modals -->
     <div id="ferieModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 animate-scale-in text-sm"><h3 class="text-xl font-bold mb-4 text-gray-800"><i class="fa-solid fa-umbrella-beach text-yellow-500 mr-2"></i>Gestione Ferie</h3><div class="space-y-4 mb-6"><div><label class="font-bold text-xs text-gray-500 uppercase">Dal giorno</label><input type="date" id="ferieStart" class="input-modern mt-1"></div><div><label class="font-bold text-xs text-gray-500 uppercase">Al giorno (compreso)</label><input type="date" id="ferieEnd" class="input-modern mt-1"></div></div><div class="grid grid-cols-2 gap-2"><button onclick="applyFerie('remove')" class="bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 py-2 rounded-lg font-bold transition">Rimuovi</button><button onclick="applyFerie('add')" class="bg-yellow-500 text-white hover:bg-yellow-600 py-2 rounded-lg font-bold shadow-md transition">Inserisci</button></div><button onclick="closeModal('ferieModal')" class="w-full mt-4 text-gray-400 text-xs hover:underline text-center">Chiudi</button></div></div>
     <div id="ruleModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-scale-in text-sm"><h3 class="text-lg font-bold mb-2 text-gray-800">Regola per <span id="ruleDateDisplay" class="text-blue-600"></span></h3><div class="mb-4"><label class="font-bold text-xs text-gray-500 uppercase">Restrizione</label><select id="ruleRestriction" class="input-modern mt-1"><option value="">-- Nessuna (Solo Nota) --</option><option value="R_ONLY">Obbligo Riposo</option><option value="EXAM">Esame / Studio</option><option value="M_ONLY">Solo Mattina</option><option value="P_ONLY">Solo Pomeriggio</option><option value="P_OR_N_ONLY">Solo Pom. o Notte</option><option value="NO_LONG">Niente Lunghe</option><option value="N_ONLY">Solo Notte</option><option value="NO_NIGHT">Niente Notte</option></select></div><div class="mb-4"><label class="font-bold text-xs text-gray-500 uppercase">Nota Personale</label><input type="text" id="ruleLabel" class="input-modern mt-1" placeholder="Es. Pasquetta, Lezione..."></div><div class="flex justify-end gap-3"><button onclick="deleteRule()" class="text-red-500 hover:bg-red-50 px-3 py-2 rounded text-sm font-medium mr-auto">Elimina</button><button onclick="closeModal('ruleModal')" class="px-4 py-2 border rounded hover:bg-gray-100">Annulla</button><button onclick="saveRule()" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 shadow-md">Salva</button></div></div></div>
-    <div id="shiftsModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4 text-sm"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl p-6 max-h-[90vh] overflow-y-auto animate-scale-in"><div class="flex justify-between items-center mb-6"><div><h3 class="text-xl font-bold text-gray-800">Matrice Turni</h3></div><button onclick="addShiftRow()" class="text-blue-600 bg-blue-50 px-3 py-1 rounded hover:bg-blue-100 text-sm font-bold">+ Aggiungi</button></div><table class="w-full text-sm text-left"><thead class="bg-gray-50 text-xs uppercase text-gray-500"><tr><th class="p-3">Codice</th><th class="p-3">Inizio</th><th class="p-3">Fine</th><th class="p-3">Pausa (min)</th><th class="p-3">Durata Tot</th><th class="p-3"></th></tr></thead><tbody id="shiftsBody"></tbody></table><div class="flex justify-end mt-8"><button onclick="closeModal('shiftsModal')" class="px-4 py-2 border rounded">Chiudi</button></div></div></div>
+    <div id="shiftsModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4 text-sm"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl p-6 max-h-[90vh] overflow-y-auto animate-scale-in"><div class="flex justify-between items-center mb-6"><div><h3 class="text-xl font-bold text-gray-800">Matrice Turni</h3></div><button onclick="addShiftRow()" class="text-blue-600 bg-blue-50 px-3 py-1 rounded hover:bg-blue-100 text-sm font-bold">+ Aggiungi</button></div><table class="w-full text-sm text-left"><thead class="bg-gray-50 text-xs uppercase text-gray-500"><tr><th class="p-3">Codice</th><th class="p-3">Inizio</th><th class="p-3">Fine</th><th class="p-3">Pausa (min)</th><th class="p-3">Etichetta Word</th><th class="p-3">Durata Tot</th><th class="p-3"></th></tr></thead><tbody id="shiftsBody"></tbody></table><div class="flex justify-end mt-8"><button onclick="closeModal('shiftsModal')" class="px-4 py-2 border rounded">Chiudi</button></div></div></div>
 
     <!-- Override Orario Modal -->
     <div id="overrideModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
@@ -350,6 +350,7 @@
             if(!appState.config.logoUnibo) appState.config.logoUnibo = '';
             if(!appState.config.logoAusl) appState.config.logoAusl = '';
             if(!appState.shiftOverrides) appState.shiftOverrides = {};
+            appState.shiftsDefinitions.forEach(s => { if(!s.wordLabel) s.wordLabel = ''; });
             if(appState.config.startDate) { renderCalendar(); } else openSettingsModal();
         }
 
@@ -538,7 +539,7 @@
             saveData();
         }
         function openShiftsModal(){renderShiftsEditor();document.getElementById('shiftsModal').classList.remove('hidden');}
-        function renderShiftsEditor(){const tb=document.getElementById('shiftsBody');tb.innerHTML='';appState.shiftsDefinitions.forEach((s,i)=>{const d=minsToTime(calculateMinutes(s.start,s.end,s.break));tb.innerHTML+=`<tr class="border-b"><td class="p-2"><input onblur="updShift(${i},'code',this.value)" value="${s.code}" class="w-12 border rounded p-1 font-bold uppercase text-center bg-gray-50"></td><td class="p-2"><input type="time" onblur="updShift(${i},'start',this.value)" value="${s.start}" class="border rounded p-1"></td><td class="p-2"><input type="time" onblur="updShift(${i},'end',this.value)" value="${s.end}" class="border rounded p-1"></td><td class="p-2"><input type="number" onblur="updShift(${i},'break',this.value)" value="${s.break}" class="w-16 border rounded p-1 text-center"></td><td class="p-2 font-mono text-gray-500">${d}</td><td class="p-2 text-right"><button onclick="delShift(${i})" class="text-red-500"><i class="fa-solid fa-trash"></i></button></td></tr>`;});}
+        function renderShiftsEditor(){const tb=document.getElementById('shiftsBody');tb.innerHTML='';appState.shiftsDefinitions.forEach((s,i)=>{const d=minsToTime(calculateMinutes(s.start,s.end,s.break));tb.innerHTML+=`<tr class="border-b"><td class="p-2"><input onblur="updShift(${i},'code',this.value)" value="${s.code}" class="w-12 border rounded p-1 font-bold uppercase text-center bg-gray-50"></td><td class="p-2"><input type="time" onblur="updShift(${i},'start',this.value)" value="${s.start}" class="border rounded p-1"></td><td class="p-2"><input type="time" onblur="updShift(${i},'end',this.value)" value="${s.end}" class="border rounded p-1"></td><td class="p-2"><input type="number" onblur="updShift(${i},'break',this.value)" value="${s.break}" class="w-16 border rounded p-1 text-center"></td><td class="p-2"><input onblur="updShift(${i},'wordLabel',this.value)" value="${s.wordLabel||''}" placeholder="es. Sciopero" class="w-28 border rounded p-1 text-xs text-gray-700"></td><td class="p-2 font-mono text-gray-500">${d}</td><td class="p-2 text-right"><button onclick="delShift(${i})" class="text-red-500"><i class="fa-solid fa-trash"></i></button></td></tr>`;});}
         function updShift(i,k,v){appState.shiftsDefinitions[i][k]=v;renderShiftsEditor();renderCalendar();}
         function addShiftRow(){appState.shiftsDefinitions.push({code:'?',start:'07:00',end:'14:00',break:0});renderShiftsEditor();}
         function delShift(i){appState.shiftsDefinitions.splice(i,1);renderShiftsEditor();renderCalendar();}
@@ -1032,16 +1033,30 @@
                     if(i < workedRows.length) {
                         const { ds, code, sh } = workedRows[i];
                         const u = code.toUpperCase();
-                        const isM = u.startsWith('M') || u.startsWith('L');
-                        const isP = u.startsWith('P');
-                        const isN = u === 'N';
+                        const wordLabel = sh && sh.wordLabel;
                         setCellText(tcs[0], `${i+1}. ${formatDateIT(ds)}`);
-                        setCellText(tcs[1], isM && sh && sh.start ? sh.start : '', true);
-                        setCellText(tcs[2], isM && sh && sh.end   ? sh.end   : '', true);
-                        setCellText(tcs[3], isP && sh && sh.start ? sh.start : '', true);
-                        setCellText(tcs[4], isP && sh && sh.end   ? sh.end   : '', true);
-                        setCellText(tcs[5], isN && sh && sh.start ? sh.start : '', true);
-                        setCellText(tcs[6], isN && sh && sh.end   ? sh.end   : '', true);
+                        if(wordLabel) {
+                            // Turno speciale (es. Sciopero, Università, Gita): mostra etichetta + ore riconosciute
+                            const totalMin = (sh.start && sh.end) ? calculateMinutes(sh.start, sh.end, sh.break||0) : 0;
+                            const hh = Math.floor(totalMin/60), mm = totalMin%60;
+                            const hoursStr = '+' + hh + (mm > 0 ? 'h ' + (mm<10?'0':'') + mm + 'm' : 'h');
+                            setCellText(tcs[1], wordLabel, true);
+                            setCellText(tcs[2], hoursStr, true);
+                            setCellText(tcs[3], '', true);
+                            setCellText(tcs[4], '', true);
+                            setCellText(tcs[5], '', true);
+                            setCellText(tcs[6], '', true);
+                        } else {
+                            const isM = u.startsWith('M') || u.startsWith('L');
+                            const isP = u.startsWith('P');
+                            const isN = u === 'N';
+                            setCellText(tcs[1], isM && sh && sh.start ? sh.start : '', true);
+                            setCellText(tcs[2], isM && sh && sh.end   ? sh.end   : '', true);
+                            setCellText(tcs[3], isP && sh && sh.start ? sh.start : '', true);
+                            setCellText(tcs[4], isP && sh && sh.end   ? sh.end   : '', true);
+                            setCellText(tcs[5], isN && sh && sh.start ? sh.start : '', true);
+                            setCellText(tcs[6], isN && sh && sh.end   ? sh.end   : '', true);
+                        }
                         setCellText(tcs[7], '', false);
                         setCellText(tcs[8], '', false);
                     } else {

@@ -214,22 +214,6 @@
             <div><label class="font-bold text-xs text-gray-500 uppercase">Anno di Corso</label><input type="text" id="settingCourseYear" class="input-modern mt-1" placeholder="Es. III"></div>
             <div><label class="font-bold text-xs text-gray-500 uppercase">Anno Accademico</label><input type="text" id="settingAcademicYear" class="input-modern mt-1" placeholder="Es. 2024/2025"></div>
           </div>
-          <div class="mb-3">
-            <label class="font-bold text-xs text-gray-500 uppercase">Logo Università (UniBo)</label>
-            <div class="flex items-center gap-2 mt-1">
-              <input type="file" id="logoUniboInput" accept="image/*" class="hidden" onchange="handleLogoUpload('logoUnibo', this)">
-              <button onclick="document.getElementById('logoUniboInput').click()" class="px-3 py-1.5 border border-dashed border-gray-300 rounded-lg text-xs text-gray-500 hover:bg-gray-50 hover:border-gray-400 transition flex items-center gap-1"><i class="fa-solid fa-upload text-blue-500"></i> Carica PNG/JPG</button>
-              <span id="logoUniboStatus" class="text-xs text-gray-400">Nessun logo</span>
-            </div>
-          </div>
-          <div>
-            <label class="font-bold text-xs text-gray-500 uppercase">Logo AUSL / SSR</label>
-            <div class="flex items-center gap-2 mt-1">
-              <input type="file" id="logoAuslInput" accept="image/*" class="hidden" onchange="handleLogoUpload('logoAusl', this)">
-              <button onclick="document.getElementById('logoAuslInput').click()" class="px-3 py-1.5 border border-dashed border-gray-300 rounded-lg text-xs text-gray-500 hover:bg-gray-50 hover:border-gray-400 transition flex items-center gap-1"><i class="fa-solid fa-upload text-green-500"></i> Carica PNG/JPG</button>
-              <span id="logoAuslStatus" class="text-xs text-gray-400">Nessun logo</span>
-            </div>
-          </div>
         </div>
         <div class="flex justify-end gap-3"><button onclick="closeModal('settingsModal')" class="px-4 py-2 border rounded-lg hover:bg-gray-100">Annulla</button><button onclick="applySettings()" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700">Applica</button></div>
       </div>
@@ -537,8 +521,6 @@
             document.getElementById('settingName').value=appState.config.name||'';
             document.getElementById('settingCourseYear').value=appState.config.courseYear||'III';
             document.getElementById('settingAcademicYear').value=appState.config.academicYear||'';
-            document.getElementById('logoUniboStatus').textContent=appState.config.logoUnibo?'✅ Logo caricato':'Nessun logo';
-            document.getElementById('logoAuslStatus').textContent=appState.config.logoAusl?'✅ Logo caricato':'Nessun logo';
             document.getElementById('settingsModal').classList.remove('hidden');
         }
         function applySettings(){
@@ -551,18 +533,9 @@
             appState.config.name=document.getElementById('settingName').value;
             appState.config.courseYear=document.getElementById('settingCourseYear').value||'III';
             appState.config.academicYear=document.getElementById('settingAcademicYear').value||'';
-            if(appState.config.startDate){closeModal('settingsModal');renderCalendar();saveData();}
-        }
-        function handleLogoUpload(field, input) {
-            const file = input.files[0]; if(!file) return;
-            const reader = new FileReader();
-            reader.onload = e => {
-                appState.config[field] = e.target.result;
-                const statusId = field === 'logoUnibo' ? 'logoUniboStatus' : 'logoAuslStatus';
-                document.getElementById(statusId).textContent = '✅ Logo caricato';
-                saveData();
-            };
-            reader.readAsDataURL(file);
+            closeModal('settingsModal');
+            if(appState.config.startDate){renderCalendar();}
+            saveData();
         }
         function openShiftsModal(){renderShiftsEditor();document.getElementById('shiftsModal').classList.remove('hidden');}
         function renderShiftsEditor(){const tb=document.getElementById('shiftsBody');tb.innerHTML='';appState.shiftsDefinitions.forEach((s,i)=>{const d=minsToTime(calculateMinutes(s.start,s.end,s.break));tb.innerHTML+=`<tr class="border-b"><td class="p-2"><input onblur="updShift(${i},'code',this.value)" value="${s.code}" class="w-12 border rounded p-1 font-bold uppercase text-center bg-gray-50"></td><td class="p-2"><input type="time" onblur="updShift(${i},'start',this.value)" value="${s.start}" class="border rounded p-1"></td><td class="p-2"><input type="time" onblur="updShift(${i},'end',this.value)" value="${s.end}" class="border rounded p-1"></td><td class="p-2"><input type="number" onblur="updShift(${i},'break',this.value)" value="${s.break}" class="w-16 border rounded p-1 text-center"></td><td class="p-2 font-mono text-gray-500">${d}</td><td class="p-2 text-right"><button onclick="delShift(${i})" class="text-red-500"><i class="fa-solid fa-trash"></i></button></td></tr>`;});}

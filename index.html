@@ -117,6 +117,7 @@
                 <div class="w-px h-8 bg-gray-200 mx-1 hidden md:block"></div>
                 <button onclick="openSimulationModal()" class="bg-indigo-50 border border-indigo-100 text-indigo-700 hover:bg-indigo-100 px-4 py-2 rounded-lg text-sm font-bold shadow-sm"><i class="fa-solid fa-flag-checkered mr-2"></i>Chiusura</button>
                 <button onclick="generatePDF()" class="bg-red-50 border border-red-100 text-red-700 hover:bg-red-100 px-4 py-2 rounded-lg text-sm font-bold shadow-sm"><i class="fa-solid fa-file-pdf mr-2"></i>Stampa</button>
+                <button onclick="generateCartellino()" class="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded-lg text-sm font-bold shadow-sm shadow-green-200"><i class="fa-solid fa-id-card mr-2"></i>Cartellino</button>
                 <button onclick="handleLogout()" class="ml-2 text-gray-400 hover:text-red-500 px-3 transition" title="Esci"><i class="fa-solid fa-power-off"></i></button>
             </div>
         </nav>
@@ -194,7 +195,42 @@
     </div>
 
     <!-- Settings Modal -->
-    <div id="settingsModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 animate-scale-in max-h-[90vh] overflow-y-auto text-sm"><h3 class="text-xl font-bold mb-6 text-gray-800 border-b pb-2">Configurazione Periodo</h3><div class="mb-4"><label class="font-bold text-xs text-gray-500 uppercase">Nome Periodo (Opzionale)</label><input type="text" id="settingName" class="input-modern mt-1" placeholder="Es. Tirocinio 2° Anno"></div><div class="grid grid-cols-2 gap-4 mb-4"><div><label class="font-bold text-xs text-gray-500 uppercase">Inizio</label><input type="date" id="settingStart" class="input-modern mt-1"></div><div><label class="font-bold text-xs text-gray-500 uppercase">Fine</label><input type="date" id="settingEnd" class="input-modern mt-1"></div></div><div class="mb-4"><label class="font-bold text-xs text-gray-500 uppercase">Reparto</label><input type="text" id="settingReparto" class="input-modern mt-1"></div><div class="mb-4"><label class="font-bold text-xs text-gray-500 uppercase">Coordinatore</label><input type="text" id="settingCoord" class="input-modern mt-1"></div><div class="mb-6"><label class="font-bold text-xs text-gray-500 uppercase">Target (h)</label><input type="number" id="settingTarget" class="input-modern mt-1"></div><div class="mb-6 border-t pt-4"><label class="font-bold text-xs text-gray-500 uppercase">Riporto Ore</label><input type="number" id="settingLegacy" class="input-modern mt-1"></div><div class="flex justify-end gap-3"><button onclick="closeModal('settingsModal')" class="px-4 py-2 border rounded-lg hover:bg-gray-100">Annulla</button><button onclick="applySettings()" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700">Applica</button></div></div></div>
+    <div id="settingsModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 animate-scale-in max-h-[90vh] overflow-y-auto text-sm">
+        <h3 class="text-xl font-bold mb-6 text-gray-800 border-b pb-2">Configurazione Periodo</h3>
+        <div class="mb-4"><label class="font-bold text-xs text-gray-500 uppercase">Nome Periodo (Opzionale)</label><input type="text" id="settingName" class="input-modern mt-1" placeholder="Es. Tirocinio 2° Anno"></div>
+        <div class="grid grid-cols-2 gap-4 mb-4"><div><label class="font-bold text-xs text-gray-500 uppercase">Inizio</label><input type="date" id="settingStart" class="input-modern mt-1"></div><div><label class="font-bold text-xs text-gray-500 uppercase">Fine</label><input type="date" id="settingEnd" class="input-modern mt-1"></div></div>
+        <div class="mb-4"><label class="font-bold text-xs text-gray-500 uppercase">Reparto</label><input type="text" id="settingReparto" class="input-modern mt-1"></div>
+        <div class="mb-4"><label class="font-bold text-xs text-gray-500 uppercase">Coordinatore</label><input type="text" id="settingCoord" class="input-modern mt-1"></div>
+        <div class="mb-4"><label class="font-bold text-xs text-gray-500 uppercase">Target (h)</label><input type="number" id="settingTarget" class="input-modern mt-1"></div>
+        <div class="mb-4 border-t pt-4"><label class="font-bold text-xs text-gray-500 uppercase">Riporto Ore</label><input type="number" id="settingLegacy" class="input-modern mt-1"></div>
+        <!-- CARTELLINO UFFICIALE SECTION -->
+        <div class="border-t pt-4 mb-6">
+          <h4 class="font-bold text-xs text-green-700 uppercase tracking-wider mb-3 flex items-center gap-2"><i class="fa-solid fa-id-card"></i> Dati Cartellino Ufficiale</h4>
+          <div class="grid grid-cols-2 gap-4 mb-3">
+            <div><label class="font-bold text-xs text-gray-500 uppercase">Anno di Corso</label><input type="text" id="settingCourseYear" class="input-modern mt-1" placeholder="Es. III"></div>
+            <div><label class="font-bold text-xs text-gray-500 uppercase">Anno Accademico</label><input type="text" id="settingAcademicYear" class="input-modern mt-1" placeholder="Es. 2024/2025"></div>
+          </div>
+          <div class="mb-3">
+            <label class="font-bold text-xs text-gray-500 uppercase">Logo Università (UniBo)</label>
+            <div class="flex items-center gap-2 mt-1">
+              <input type="file" id="logoUniboInput" accept="image/*" class="hidden" onchange="handleLogoUpload('logoUnibo', this)">
+              <button onclick="document.getElementById('logoUniboInput').click()" class="px-3 py-1.5 border border-dashed border-gray-300 rounded-lg text-xs text-gray-500 hover:bg-gray-50 hover:border-gray-400 transition flex items-center gap-1"><i class="fa-solid fa-upload text-blue-500"></i> Carica PNG/JPG</button>
+              <span id="logoUniboStatus" class="text-xs text-gray-400">Nessun logo</span>
+            </div>
+          </div>
+          <div>
+            <label class="font-bold text-xs text-gray-500 uppercase">Logo AUSL / SSR</label>
+            <div class="flex items-center gap-2 mt-1">
+              <input type="file" id="logoAuslInput" accept="image/*" class="hidden" onchange="handleLogoUpload('logoAusl', this)">
+              <button onclick="document.getElementById('logoAuslInput').click()" class="px-3 py-1.5 border border-dashed border-gray-300 rounded-lg text-xs text-gray-500 hover:bg-gray-50 hover:border-gray-400 transition flex items-center gap-1"><i class="fa-solid fa-upload text-green-500"></i> Carica PNG/JPG</button>
+              <span id="logoAuslStatus" class="text-xs text-gray-400">Nessun logo</span>
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-end gap-3"><button onclick="closeModal('settingsModal')" class="px-4 py-2 border rounded-lg hover:bg-gray-100">Annulla</button><button onclick="applySettings()" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700">Applica</button></div>
+      </div>
+    </div>
 
     <!-- History / Manager Modal -->
     <div id="historyModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4 text-sm">
@@ -268,7 +304,7 @@
         let currentOverrideDate = null, currentOverrideCode = null;
         let appState = {
             id: Date.now(), // Unique ID for current period
-            config: { name: '', startDate: '', endDate: '', targetHours: 0, reparto: '', coordinatore: '', legacyBalance: 0 },
+            config: { name: '', startDate: '', endDate: '', targetHours: 0, reparto: '', coordinatore: '', legacyBalance: 0, courseYear: 'III', academicYear: '', logoUnibo: '', logoAusl: '' },
             shiftsDefinitions: [ { code: 'M', start: '07:00', end: '14:12', break: 0 }, { code: 'P', start: '14:00', end: '21:12', break: 0 }, { code: 'N', start: '21:00', end: '07:00', break: 0 }, { code: '/', start: '', end: '', break: 0 }, { code: 'L', start: '07:30', end: '18:00', break: 30 }, { code: 'R', start: '', end: '', break: 0 } ],
             schedule: {}, tutors: {}, rules: {}, history: [],
             shiftOverrides: {}
@@ -322,6 +358,10 @@
             if(!appState.history) appState.history = [];
             if(!appState.id) appState.id = Date.now(); // Ensure ID
             if(!appState.config.legacyBalance) appState.config.legacyBalance = 0;
+            if(!appState.config.courseYear) appState.config.courseYear = 'III';
+            if(!appState.config.academicYear) appState.config.academicYear = '';
+            if(!appState.config.logoUnibo) appState.config.logoUnibo = '';
+            if(!appState.config.logoAusl) appState.config.logoAusl = '';
             if(!appState.shiftOverrides) appState.shiftOverrides = {};
             if(appState.config.startDate) { renderCalendar(); } else openSettingsModal();
         }
@@ -484,8 +524,43 @@
         function closeModal(id){document.getElementById(id).classList.add('hidden');}
         function handleWeekAction(s){const so=getSafeDate(s); const w=getWeekNumber(so); if(!copySourceWeek){copySourceWeek=w;window.copyBuf=[];const dt=getSafeDate(s);for(let i=0;i<7;i++){window.copyBuf.push(appState.schedule[getDateStr(dt)]||'');dt.setDate(dt.getDate()+1);}document.getElementById('copyPasteToolbar').classList.remove('hidden');document.getElementById('copySourceWeek').textContent="W"+w;renderCalendar();}else{if(w===copySourceWeek)return;const dt=getSafeDate(s);window.copyBuf.forEach(c=>{const ds=getDateStr(dt);if(c){appState.schedule[ds]=c;const sh=getShiftInfo(c);if(sh&&isOvernight(sh)){const nd=new Date(dt);nd.setDate(nd.getDate()+1);const nds=getDateStr(nd);if(nds<=appState.config.endDate)appState.schedule[nds]='/';}}else delete appState.schedule[ds];dt.setDate(dt.getDate()+1);});cancelCopy();}}
         function cancelCopy(){copySourceWeek=null;document.getElementById('copyPasteToolbar').classList.add('hidden');renderCalendar();}
-        function openSettingsModal(){document.getElementById('settingStart').value=appState.config.startDate;document.getElementById('settingEnd').value=appState.config.endDate;document.getElementById('settingTarget').value=appState.config.targetHours;document.getElementById('settingReparto').value=appState.config.reparto;document.getElementById('settingCoord').value=appState.config.coordinatore;document.getElementById('settingLegacy').value=appState.config.legacyBalance;document.getElementById('settingName').value=appState.config.name||'';document.getElementById('settingsModal').classList.remove('hidden');}
-        function applySettings(){appState.config.startDate=document.getElementById('settingStart').value;appState.config.endDate=document.getElementById('settingEnd').value;appState.config.targetHours=document.getElementById('settingTarget').value;appState.config.reparto=document.getElementById('settingReparto').value;appState.config.coordinatore=document.getElementById('settingCoord').value;appState.config.legacyBalance=parseInt(document.getElementById('settingLegacy').value)||0;appState.config.name=document.getElementById('settingName').value;if(appState.config.startDate){closeModal('settingsModal');renderCalendar();saveData();}}
+        function openSettingsModal(){
+            document.getElementById('settingStart').value=appState.config.startDate;
+            document.getElementById('settingEnd').value=appState.config.endDate;
+            document.getElementById('settingTarget').value=appState.config.targetHours;
+            document.getElementById('settingReparto').value=appState.config.reparto;
+            document.getElementById('settingCoord').value=appState.config.coordinatore;
+            document.getElementById('settingLegacy').value=appState.config.legacyBalance;
+            document.getElementById('settingName').value=appState.config.name||'';
+            document.getElementById('settingCourseYear').value=appState.config.courseYear||'III';
+            document.getElementById('settingAcademicYear').value=appState.config.academicYear||'';
+            document.getElementById('logoUniboStatus').textContent=appState.config.logoUnibo?'✅ Logo caricato':'Nessun logo';
+            document.getElementById('logoAuslStatus').textContent=appState.config.logoAusl?'✅ Logo caricato':'Nessun logo';
+            document.getElementById('settingsModal').classList.remove('hidden');
+        }
+        function applySettings(){
+            appState.config.startDate=document.getElementById('settingStart').value;
+            appState.config.endDate=document.getElementById('settingEnd').value;
+            appState.config.targetHours=document.getElementById('settingTarget').value;
+            appState.config.reparto=document.getElementById('settingReparto').value;
+            appState.config.coordinatore=document.getElementById('settingCoord').value;
+            appState.config.legacyBalance=parseInt(document.getElementById('settingLegacy').value)||0;
+            appState.config.name=document.getElementById('settingName').value;
+            appState.config.courseYear=document.getElementById('settingCourseYear').value||'III';
+            appState.config.academicYear=document.getElementById('settingAcademicYear').value||'';
+            if(appState.config.startDate){closeModal('settingsModal');renderCalendar();saveData();}
+        }
+        function handleLogoUpload(field, input) {
+            const file = input.files[0]; if(!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                appState.config[field] = e.target.result;
+                const statusId = field === 'logoUnibo' ? 'logoUniboStatus' : 'logoAuslStatus';
+                document.getElementById(statusId).textContent = '✅ Logo caricato';
+                saveData();
+            };
+            reader.readAsDataURL(file);
+        }
         function openShiftsModal(){renderShiftsEditor();document.getElementById('shiftsModal').classList.remove('hidden');}
         function renderShiftsEditor(){const tb=document.getElementById('shiftsBody');tb.innerHTML='';appState.shiftsDefinitions.forEach((s,i)=>{const d=minsToTime(calculateMinutes(s.start,s.end,s.break));tb.innerHTML+=`<tr class="border-b"><td class="p-2"><input onblur="updShift(${i},'code',this.value)" value="${s.code}" class="w-12 border rounded p-1 font-bold uppercase text-center bg-gray-50"></td><td class="p-2"><input type="time" onblur="updShift(${i},'start',this.value)" value="${s.start}" class="border rounded p-1"></td><td class="p-2"><input type="time" onblur="updShift(${i},'end',this.value)" value="${s.end}" class="border rounded p-1"></td><td class="p-2"><input type="number" onblur="updShift(${i},'break',this.value)" value="${s.break}" class="w-16 border rounded p-1 text-center"></td><td class="p-2 font-mono text-gray-500">${d}</td><td class="p-2 text-right"><button onclick="delShift(${i})" class="text-red-500"><i class="fa-solid fa-trash"></i></button></td></tr>`;});}
         function updShift(i,k,v){appState.shiftsDefinitions[i][k]=v;renderShiftsEditor();renderCalendar();}
@@ -756,6 +831,161 @@
                 ],
                 styles: { header: { fontSize: 18, bold: true, margin: [0,0,0,10] }, subheader: { fontSize: 12, bold: true } }
             }).open();
+        }
+
+        function generateCartellino() {
+            if(!appState.config.startDate) { alert("Configura prima il periodo (Config.)."); return; }
+
+            const dates = getDatesInRange(appState.config.startDate, appState.config.endDate);
+
+            // Solo turni effettivamente lavorati — escludi smonto (/) e riposo (R)
+            const workedRows = [];
+            dates.forEach(dObj => {
+                const ds = getDateStr(dObj);
+                const code = appState.schedule[ds] || '';
+                if (code && code !== '/' && code !== 'R') {
+                    const sh = getEffectiveShiftInfo(code, ds);
+                    workedRows.push({ ds, dObj, code, sh, tutor: appState.tutors[ds] || '' });
+                }
+            });
+
+            // Tabella: intestazione
+            const tableBody = [[
+                { text: 'N°',          bold: true, alignment: 'center', fillColor: '#f3f4f6', fontSize: 8 },
+                { text: 'DATA',        bold: true, alignment: 'center', fillColor: '#f3f4f6', fontSize: 8 },
+                { text: 'MATTINO',     bold: true, alignment: 'center', fillColor: '#f3f4f6', fontSize: 8 },
+                { text: 'POMERIGGIO',  bold: true, alignment: 'center', fillColor: '#f3f4f6', fontSize: 8 },
+                { text: 'NOTTE',       bold: true, alignment: 'center', fillColor: '#f3f4f6', fontSize: 8 },
+                { text: 'Firma\nStudente',   bold: true, alignment: 'center', fillColor: '#f3f4f6', fontSize: 7 },
+                { text: 'Firma\nInfermiere', bold: true, alignment: 'center', fillColor: '#f3f4f6', fontSize: 7 },
+            ]];
+
+            // Righe dati (max 32, poi continua)
+            const totalRows = Math.max(32, workedRows.length);
+            for (let i = 0; i < totalRows; i++) {
+                if (i < workedRows.length) {
+                    const { ds, dObj, code, sh, tutor } = workedRows[i];
+                    const timeStr = (sh && sh.start && sh.end) ? `${sh.start}-${sh.end}` : '';
+                    const upper = code.toUpperCase();
+                    const isM = upper.startsWith('M') || upper.startsWith('L');
+                    const isP = upper.startsWith('P');
+                    const isN = upper === 'N';
+                    tableBody.push([
+                        { text: (i+1).toString(), alignment: 'center', fontSize: 8 },
+                        { text: formatDateIT(ds), alignment: 'center', fontSize: 8 },
+                        { text: isM ? timeStr : '', alignment: 'center', fontSize: 7 },
+                        { text: isP ? timeStr : '', alignment: 'center', fontSize: 7 },
+                        { text: isN ? timeStr : '', alignment: 'center', fontSize: 7 },
+                        { text: '', alignment: 'center', fontSize: 8 },
+                        { text: '', alignment: 'center', fontSize: 8 },
+                    ]);
+                } else {
+                    tableBody.push([
+                        { text: (i+1).toString(), alignment: 'center', fontSize: 8, color: '#aaa' },
+                        { text: '___/___/___', alignment: 'center', fontSize: 8, color: '#ccc' },
+                        { text: '', fontSize: 8 }, { text: '', fontSize: 8 }, { text: '', fontSize: 8 },
+                        { text: '', fontSize: 8 }, { text: '', fontSize: 8 },
+                    ]);
+                }
+            }
+
+            const totalMins = calculateTotalPeriodMinutes();
+            const th = Math.floor(totalMins/60), tm = totalMins%60;
+            const totalStr = `${th}h ${String(tm).padStart(2,'0')}m`;
+
+            const cfg = appState.config;
+            const studentName = document.getElementById('userDisplayName').textContent;
+            const matricola = document.getElementById('userMatricola').textContent;
+
+            // Costruisci intestazione con loghi
+            const headerCols = [];
+            if (cfg.logoUnibo) {
+                headerCols.push({ image: cfg.logoUnibo, width: 65, alignment: 'left', margin: [0,0,0,0] });
+            } else {
+                headerCols.push({ stack: [
+                    { text: 'ALMA MATER STUDIORUM', fontSize: 9, bold: true, color: '#8B0000' },
+                    { text: 'UNIVERSITÀ DI BOLOGNA', fontSize: 8, color: '#8B0000' }
+                ], alignment: 'left', margin: [0,4,0,0] });
+            }
+            headerCols.push({ text: '', width: '*' });
+            if (cfg.logoAusl) {
+                headerCols.push({ image: cfg.logoAusl, width: 100, alignment: 'right', margin: [0,0,0,0] });
+            } else {
+                headerCols.push({ stack: [
+                    { text: 'SERVIZIO SANITARIO REGIONALE', fontSize: 7, bold: true, color: '#006633' },
+                    { text: 'EMILIA-ROMAGNA', fontSize: 7, color: '#006633' },
+                    { text: 'Azienda Unità Sanitaria Locale della Romagna', fontSize: 6, color: '#444' }
+                ], alignment: 'right', margin: [0,4,0,0] });
+            }
+
+            const docDef = {
+                pageSize: 'A4',
+                pageMargins: [35, 28, 30, 35],
+                content: [
+                    // Loghi
+                    { columns: headerCols, margin: [0,0,0,6] },
+                    { canvas: [{ type: 'line', x1:0, y1:0, x2:530, y2:0, lineWidth:1, lineColor:'#555' }] },
+                    { text: ' ', fontSize: 4 },
+                    // Intestazione documento
+                    { text: 'CAMPUS DI RAVENNA', fontSize: 11, bold: true, alignment: 'center', margin: [0,4,0,0] },
+                    { text: 'SCUOLA DI MEDICINA E CHIRURGIA', fontSize: 10, alignment: 'center' },
+                    { text: 'CORSO DI LAUREA IN INFERMIERISTICA', fontSize: 10, alignment: 'center' },
+                    { text: 'SEZIONE FORMATIVA DI FAENZA', fontSize: 9, alignment: 'center', color: '#555' },
+                    { text: ' ', fontSize: 4 },
+                    { text: 'PRESENZE GIORNALIERE IN TIROCINIO CLINICO', fontSize: 13, bold: true, alignment: 'center', decoration: 'underline', margin: [0,4,0,8] },
+                    // Dati studente
+                    { text: [
+                        { text: `${cfg.courseYear || '___'}`, bold: true, fontSize: 12 },
+                        { text: `° Anno di Corso  –  A.A. `, fontSize: 10 },
+                        { text: cfg.academicYear || '___/___', bold: true, fontSize: 10 },
+                    ], margin: [0,0,0,4] },
+                    { columns: [
+                        { text: 'Studente ', fontSize: 10, width: 'auto' },
+                        { text: studentName + (matricola && matricola !== '...' ? `  (matr. ${matricola})` : ''), fontSize: 10, bold: true, decoration: 'underline', width: '*' }
+                    ], margin: [0,0,0,3] },
+                    { text: [
+                        { text: 'Sede di Tirocinio  ', fontSize: 10 },
+                        { text: cfg.reparto || '______________________________________', fontSize: 10, bold: true, decoration: 'underline' }
+                    ], margin: [0,0,0,3] },
+                    { text: [
+                        { text: 'Numero ore di frequenza programmata: ', fontSize: 10 },
+                        { text: String(cfg.targetHours || '____'), fontSize: 10, bold: true },
+                        { text: ' ore', fontSize: 10 }
+                    ], margin: [0,0,0,8] },
+                    // Tabella presenze
+                    {
+                        table: {
+                            headerRows: 1,
+                            widths: [18, 52, 82, 82, 72, 72, 'auto'],
+                            body: tableBody
+                        },
+                        layout: {
+                            hLineWidth: () => 0.4,
+                            vLineWidth: () => 0.4,
+                            hLineColor: () => '#999',
+                            vLineColor: () => '#999',
+                            paddingLeft: () => 3,
+                            paddingRight: () => 3,
+                            paddingTop: () => 3,
+                            paddingBottom: () => 3,
+                        }
+                    },
+                    // Footer
+                    { text: ' ', fontSize: 6, margin: [0,6,0,0] },
+                    { text: [
+                        { text: 'Numero effettivo di ore frequentate: ', fontSize: 10 },
+                        { text: totalStr, fontSize: 11, bold: true }
+                    ], margin: [0,4,0,8] },
+                    { canvas: [{ type: 'line', x1:0, y1:0, x2:530, y2:0, lineWidth:0.5, lineColor:'#aaa' }] },
+                    { columns: [
+                        { text: [{ text: 'DATA  ', fontSize: 9 }, { text: '___/___/___', fontSize: 9 }], width: 140 },
+                        { text: 'Firma del coordinatore didattico della sede formativa', fontSize: 9, alignment: 'right', italics: true }
+                    ], margin: [0,8,0,0] },
+                ],
+                defaultStyle: { font: 'Roboto' }
+            };
+
+            pdfMake.createPdf(docDef).open();
         }
 
         function handleCSVUpload(event) {

@@ -1108,17 +1108,18 @@
                 if(headerTrPr && !headerTrPr.getElementsByTagNameNS(W, 'tblHeader').length) {
                     headerTrPr.appendChild(xmlDoc.createElementNS(W, 'w:tblHeader'));
                 }
-                const headerFirstCell = trs[0].getElementsByTagNameNS(W, 'tc')[0];
-                const headerParaPr = headerFirstCell && headerFirstCell.getElementsByTagNameNS(W, 'pPr')[0];
-                if(headerParaPr) {
-                    const sp = headerParaPr.getElementsByTagNameNS(W, 'spacing')[0];
-                    if(sp) { sp.setAttribute('w:before', '100'); }
-                    else {
-                        const nsp = xmlDoc.createElementNS(W, 'w:spacing');
-                        nsp.setAttribute('w:before', '100');
-                        headerParaPr.appendChild(nsp);
-                    }
-                }
+                // Margine superiore su tutte le celle dell'intestazione: crea lo spazio "piccolo invio"
+                // quando la tabella va a capo pagina (w:tcMar sovrascrive il margine cella=0 del template)
+                Array.from(trs[0].getElementsByTagNameNS(W, 'tc')).forEach(tc => {
+                    const tcPr = tc.getElementsByTagNameNS(W, 'tcPr')[0];
+                    if(!tcPr) return;
+                    let tcMar = tcPr.getElementsByTagNameNS(W, 'tcMar')[0];
+                    if(!tcMar) { tcMar = xmlDoc.createElementNS(W, 'w:tcMar'); tcPr.appendChild(tcMar); }
+                    let topEl = tcMar.getElementsByTagNameNS(W, 'top')[0];
+                    if(!topEl) { topEl = xmlDoc.createElementNS(W, 'w:top'); tcMar.insertBefore(topEl, tcMar.firstChild); }
+                    topEl.setAttribute('w:w', '120');
+                    topEl.setAttribute('w:type', 'dxa');
+                });
 
                 // Riga template per clonare righe aggiuntive
                 const templateRow = trs[trs.length - 1].cloneNode(true);

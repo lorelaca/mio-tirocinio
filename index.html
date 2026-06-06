@@ -120,6 +120,7 @@
                 <button onclick="openSimulationModal()" class="bg-indigo-50 border border-indigo-100 text-indigo-700 hover:bg-indigo-100 px-4 py-2 rounded-lg text-sm font-bold shadow-sm"><i class="fa-solid fa-flag-checkered mr-2"></i>Chiusura</button>
                 <button onclick="generatePDF()" class="bg-red-50 border border-red-100 text-red-700 hover:bg-red-100 px-4 py-2 rounded-lg text-sm font-bold shadow-sm"><i class="fa-solid fa-file-pdf mr-2"></i>Stampa</button>
                 <button onclick="generateCartellinoDocx()" class="bg-teal-600 text-white hover:bg-teal-700 px-4 py-2 rounded-lg text-sm font-bold shadow-sm shadow-teal-200"><i class="fa-solid fa-file-word mr-2"></i>Cartellino .docx</button>
+                <button onclick="saveData()" id="saveBtn" class="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded-lg text-sm font-bold shadow-sm shadow-green-200 flex items-center gap-2"><i class="fa-solid fa-save"></i> Salva Tutto</button>
                 <button onclick="handleLogout()" class="ml-2 text-gray-400 hover:text-red-500 px-3 transition" title="Esci"><i class="fa-solid fa-power-off"></i></button>
             </div>
         </nav>
@@ -164,7 +165,7 @@
                             <span class="flex items-center gap-1.5 bg-white border border-gray-200 px-3 py-1.5 rounded-full shadow-sm"><span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span> Smonto Notte</span>
                             <span class="flex items-center gap-1.5 bg-white border border-gray-200 px-3 py-1.5 rounded-full shadow-sm"><span class="w-2.5 h-2.5 rounded-full bg-green-500"></span> Ferie</span>
                         </div>
-                        <button onclick="saveData()" id="saveBtn" class="bg-green-600 text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-green-700 transition shadow-lg shadow-green-100 flex items-center gap-2"><i class="fa-solid fa-save"></i> Salva Modifiche</button>
+                        
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm text-left border-collapse">
@@ -1005,6 +1006,20 @@
                 // Recupera le righe della tabella
                 const trs = Array.from(xmlDoc.getElementsByTagNameNS(W, 'tr'));
 
+                // Equalizza larghezze MATTINO/POMERIGGIO/NOTTE (800 dxa ciascuna, totale invariato)
+                const tblGrid = xmlDoc.getElementsByTagNameNS(W, 'tblGrid')[0];
+                if(tblGrid) {
+                    const gridCols = Array.from(tblGrid.getElementsByTagNameNS(W, 'gridCol'));
+                    [1,2,3,4,5,6].forEach(i => { if(gridCols[i]) gridCols[i].setAttribute('w:w','800'); });
+                    if(gridCols[8]) gridCols[8].setAttribute('w:w','2290');
+                }
+                // Aggiorna tcW dell'intestazione (celle merged: M+P+N ciascuna=1600)
+                const hdrTcs = Array.from(trs[0].getElementsByTagNameNS(W, 'tc'));
+                [1421,1600,1600,1600,1700,2290].forEach((w,i) => {
+                    const tw = hdrTcs[i] && hdrTcs[i].getElementsByTagNameNS(W,'tcW')[0];
+                    if(tw) tw.setAttribute('w:w', String(w));
+                });
+
                 // Riga intestazione: aggiungi tblHeader (ripetizione su ogni pagina) e piccolo spazio sopra
                 const headerTrPr = trs[0].getElementsByTagNameNS(W, 'trPr')[0];
                 if(headerTrPr && !headerTrPr.getElementsByTagNameNS(W, 'tblHeader').length) {
@@ -1025,6 +1040,11 @@
 
                 // Riga template per clonare righe aggiuntive
                 const templateRow = trs[trs.length - 1].cloneNode(true);
+                // Equalizza larghezze celle del template (9 colonne singole)
+                Array.from(templateRow.getElementsByTagNameNS(W, 'tc')).forEach((tc, i) => {
+                    const tw = tc.getElementsByTagNameNS(W, 'tcW')[0];
+                    if(tw) tw.setAttribute('w:w', String([1421,800,800,800,800,800,800,1700,2290][i] || 800));
+                });
                 const tbl = trs[0].parentNode;
 
                 // Rimuovi le righe dati esistenti, mantieni l'intestazione

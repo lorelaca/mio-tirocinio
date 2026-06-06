@@ -1012,21 +1012,79 @@
 
             try {
                 const zip = await JSZip.loadAsync(DOCX_TEMPLATE_B64, {base64: true});
-                const xmlStr = await zip.file('word/document.xml').async('string');
+                let xmlStr = await zip.file('word/document.xml').async('string');
 
+                const cfg = appState.config;
+                const studentName = document.getElementById('userDisplayName').textContent || '';
+                const xe = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+                // --- Riempi i campi dell'intestazione via sostituzione stringa (prima del DOMParser) ---
+
+                // Anno accademico: i due textbox posizionati contengono "2021" e "2022" come segnaposto
+                const aaParts = (cfg.academicYear || '').split(/[\/\-]/);
+                const year1 = xe((aaParts[0] || '____').trim());
+                const year2 = xe((aaParts[1] || '____').trim());
+                xmlStr = xmlStr.replaceAll('<w:t>2021</w:t>', `<w:t>${year1}</w:t>`);
+                xmlStr = xmlStr.replaceAll('<w:t>2022</w:t>', `<w:t>${year2}</w:t>`);
+
+                // Anno di Corso: inserisce il valore nel campo sottolineato prima dell'etichetta "Anno di Corso"
+                if(cfg.courseYear) {
+                    const annoFind = `<w:rPr><w:rFonts w:ascii="Times New Roman"/><w:position w:val="1"/><w:u w:val="single"/></w:rPr><w:tab/></w:r><w:r><w:rPr><w:position w:val="1"/></w:rPr><w:t>Anno</w:t></w:r>`;
+                    const annoRepl = `<w:rPr><w:rFonts w:ascii="Times New Roman"/><w:position w:val="1"/><w:u w:val="single"/></w:rPr><w:t>${xe(cfg.courseYear)}</w:t></w:r><w:r><w:rPr><w:position w:val="1"/><w:u w:val="single"/></w:rPr><w:tab/></w:r><w:r><w:rPr><w:position w:val="1"/></w:rPr><w:t>Anno</w:t></w:r>`;
+                    xmlStr = xmlStr.replace(annoFind, annoRepl);
+                }
+
+                // Studente: inserisce il nome nel campo sottolineato dopo l'etichetta "Studente"
+                if(studentName) {
+                    const stuFind = `<w:t>Studente</w:t></w:r><w:r><w:rPr><w:rFonts w:ascii="Times New Roman"/></w:rPr><w:t> </w:t></w:r><w:r><w:rPr><w:rFonts w:ascii="Times New Roman"/><w:u w:val="single"/></w:rPr><w:tab/><w:tab/><w:tab/>`;
+                    const stuRepl = `<w:t>Studente</w:t></w:r><w:r><w:rPr><w:rFonts w:ascii="Times New Roman"/></w:rPr><w:t> </w:t></w:r><w:r><w:rPr><w:u w:val="single"/></w:rPr><w:t>${xe(studentName)}</w:t></w:r><w:r><w:rPr><w:rFonts w:ascii="Times New Roman"/><w:u w:val="single"/></w:rPr><w:tab/><w:tab/><w:tab/>`;
+                    xmlStr = xmlStr.replace(stuFind, stuRepl);
+                }
+
+                // Sede di Tirocinio
+                if(cfg.reparto) {
+                    const sedeFind = `<w:t>Tirocinio</w:t></w:r><w:r><w:rPr><w:rFonts w:ascii="Times New Roman"/></w:rPr><w:t> </w:t></w:r><w:r><w:rPr><w:rFonts w:ascii="Times New Roman"/><w:u w:val="single"/></w:rPr><w:tab/></w:r></w:p>`;
+                    const sedeRepl = `<w:t>Tirocinio</w:t></w:r><w:r><w:rPr><w:rFonts w:ascii="Times New Roman"/></w:rPr><w:t> </w:t></w:r><w:r><w:rPr><w:u w:val="single"/></w:rPr><w:t>${xe(cfg.reparto)}</w:t></w:r><w:r><w:rPr><w:rFonts w:ascii="Times New Roman"/><w:u w:val="single"/></w:rPr><w:tab/></w:r></w:p>`;
+                    xmlStr = xmlStr.replace(sedeFind, sedeRepl);
+                }
+
+                // Numero ore di frequenza programmata
+                if(cfg.targetHours) {
+                    const progFind = `programmata:</w:t></w:r><w:r><w:rPr><w:rFonts w:ascii="Times New Roman"/><w:spacing w:val="72"/></w:rPr><w:t> </w:t></w:r><w:r><w:rPr><w:rFonts w:ascii="Times New Roman"/><w:u w:val="single"/></w:rPr><w:tab/></w:r><w:r><w:rPr><w:spacing w:val="-5"/></w:rPr><w:t>ore</w:t>`;
+                    const progRepl = `programmata:</w:t></w:r><w:r><w:rPr><w:rFonts w:ascii="Times New Roman"/><w:spacing w:val="72"/></w:rPr><w:t> </w:t></w:r><w:r><w:rPr><w:u w:val="single"/></w:rPr><w:t>${xe(String(cfg.targetHours))}</w:t></w:r><w:r><w:rPr><w:rFonts w:ascii="Times New Roman"/><w:u w:val="single"/></w:rPr><w:tab/></w:r><w:r><w:rPr><w:spacing w:val="-5"/></w:rPr><w:t>ore</w:t>`;
+                    xmlStr = xmlStr.replace(progFind, progRepl);
+                }
+
+                // Numero effettivo di ore frequentate (calcolato automaticamente)
+                const totalMins = calculateTotalPeriodMinutes();
+                if(totalMins > 0) {
+                    const hh = Math.floor(totalMins/60), mm = totalMins%60;
+                    const totalHoursVal = xe(mm === 0 ? String(hh) : `${hh},${mm < 10 ? '0' : ''}${mm}`);
+                    const freqFind = `frequentate:</w:t></w:r><w:r><w:rPr><w:rFonts w:ascii="Times New Roman"/><w:spacing w:val="-7"/></w:rPr><w:t> </w:t></w:r><w:r><w:rPr><w:rFonts w:ascii="Times New Roman"/><w:u w:val="single"/></w:rPr><w:tab/></w:r><w:r><w:rPr><w:spacing w:val="-5"/></w:rPr><w:t>ore</w:t>`;
+                    const freqRepl = `frequentate:</w:t></w:r><w:r><w:rPr><w:rFonts w:ascii="Times New Roman"/><w:spacing w:val="-7"/></w:rPr><w:t> </w:t></w:r><w:r><w:rPr><w:u w:val="single"/></w:rPr><w:t>${totalHoursVal}</w:t></w:r><w:r><w:rPr><w:rFonts w:ascii="Times New Roman"/><w:u w:val="single"/></w:rPr><w:tab/></w:r><w:r><w:rPr><w:spacing w:val="-5"/></w:rPr><w:t>ore</w:t>`;
+                    xmlStr = xmlStr.replace(freqFind, freqRepl);
+                }
+
+                // --- Manipolazione DOM per la tabella ---
                 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
                 const parser = new DOMParser();
                 const xmlDoc = parser.parseFromString(xmlStr, 'application/xml');
 
-                // Helper: replace paragraph text in a <w:tc>, preserving cell properties
-                function setCellText(tc, text) {
+                // Helper: sostituisce il testo in una <w:tc>, preservando pPr, con centratura opzionale
+                function setCellText(tc, text, center) {
                     const paras = tc.getElementsByTagNameNS(W, 'p');
                     if(!paras.length) return;
                     const para = paras[0];
                     const pPr = para.getElementsByTagNameNS(W, 'pPr')[0];
-                    // Remove all children
                     while(para.firstChild) para.removeChild(para.firstChild);
-                    if(pPr) para.appendChild(pPr);
+                    if(pPr) {
+                        if(center) {
+                            let jc = pPr.getElementsByTagNameNS(W, 'jc')[0];
+                            if(!jc) { jc = xmlDoc.createElementNS(W, 'w:jc'); pPr.appendChild(jc); }
+                            jc.setAttribute('w:val', 'center');
+                        }
+                        para.appendChild(pPr);
+                    }
                     if(text) {
                         const r = xmlDoc.createElementNS(W, 'w:r');
                         const rPr = xmlDoc.createElementNS(W, 'w:rPr');
@@ -1042,16 +1100,31 @@
                     }
                 }
 
-                // Get table rows
+                // Recupera le righe della tabella
                 const trs = Array.from(xmlDoc.getElementsByTagNameNS(W, 'tr'));
-                // trs[0] = header row — NON toccare
-                // trs[1..32] = data rows
 
-                // Template row for cloning extra rows if needed
+                // Riga intestazione: aggiungi tblHeader (ripetizione su ogni pagina) e piccolo spazio sopra
+                const headerTrPr = trs[0].getElementsByTagNameNS(W, 'trPr')[0];
+                if(headerTrPr && !headerTrPr.getElementsByTagNameNS(W, 'tblHeader').length) {
+                    headerTrPr.appendChild(xmlDoc.createElementNS(W, 'w:tblHeader'));
+                }
+                const headerFirstCell = trs[0].getElementsByTagNameNS(W, 'tc')[0];
+                const headerParaPr = headerFirstCell && headerFirstCell.getElementsByTagNameNS(W, 'pPr')[0];
+                if(headerParaPr) {
+                    const sp = headerParaPr.getElementsByTagNameNS(W, 'spacing')[0];
+                    if(sp) { sp.setAttribute('w:before', '100'); }
+                    else {
+                        const nsp = xmlDoc.createElementNS(W, 'w:spacing');
+                        nsp.setAttribute('w:before', '100');
+                        headerParaPr.appendChild(nsp);
+                    }
+                }
+
+                // Riga template per clonare righe aggiuntive
                 const templateRow = trs[trs.length - 1].cloneNode(true);
                 const tbl = trs[0].parentNode;
 
-                // Remove existing data rows, keep header
+                // Rimuovi le righe dati esistenti, mantieni l'intestazione
                 for(let i = trs.length - 1; i >= 1; i--) tbl.removeChild(trs[i]);
 
                 const totalRows = Math.max(32, workedRows.length);
@@ -1066,18 +1139,17 @@
                         const isP = u.startsWith('P');
                         const isN = u === 'N';
                         setCellText(tcs[0], `${i+1}. ${formatDateIT(ds)}`);
-                        setCellText(tcs[1], isM && sh && sh.start ? sh.start : '');
-                        setCellText(tcs[2], isM && sh && sh.end   ? sh.end   : '');
-                        setCellText(tcs[3], isP && sh && sh.start ? sh.start : '');
-                        setCellText(tcs[4], isP && sh && sh.end   ? sh.end   : '');
-                        setCellText(tcs[5], isN && sh && sh.start ? sh.start : '');
-                        setCellText(tcs[6], isN && sh && sh.end   ? sh.end   : '');
-                        setCellText(tcs[7], '');
-                        setCellText(tcs[8], '');
+                        setCellText(tcs[1], isM && sh && sh.start ? sh.start : '', true);
+                        setCellText(tcs[2], isM && sh && sh.end   ? sh.end   : '', true);
+                        setCellText(tcs[3], isP && sh && sh.start ? sh.start : '', true);
+                        setCellText(tcs[4], isP && sh && sh.end   ? sh.end   : '', true);
+                        setCellText(tcs[5], isN && sh && sh.start ? sh.start : '', true);
+                        setCellText(tcs[6], isN && sh && sh.end   ? sh.end   : '', true);
+                        setCellText(tcs[7], '', false);
+                        setCellText(tcs[8], '', false);
                     } else {
-                        // Riga vuota con numero
                         setCellText(tcs[0], `${i+1}.`);
-                        for(let j=1;j<=8;j++) setCellText(tcs[j],'');
+                        for(let j=1;j<=8;j++) setCellText(tcs[j], '', j<=6);
                     }
                     tbl.appendChild(row);
                 }

@@ -838,56 +838,63 @@
 
             const dates = getDatesInRange(appState.config.startDate, appState.config.endDate);
 
-            // Solo turni effettivamente lavorati — escludi smonto (/) e riposo (R)
+            // Solo turni lavorati — escludi smonto (/) e riposo (R)
             const workedRows = [];
             dates.forEach(dObj => {
                 const ds = getDateStr(dObj);
                 const code = appState.schedule[ds] || '';
                 if (code && code !== '/' && code !== 'R') {
-                    const sh = getEffectiveShiftInfo(code, ds);
-                    workedRows.push({ ds, dObj, code, sh, tutor: appState.tutors[ds] || '' });
+                    workedRows.push({ ds, code, sh: getEffectiveShiftInfo(code, ds) });
                 }
             });
 
-            // Tabella: intestazione
-            const tableBody = [[
-                { text: 'N°',          bold: true, alignment: 'center', fillColor: '#f3f4f6', fontSize: 8 },
-                { text: 'DATA',        bold: true, alignment: 'center', fillColor: '#f3f4f6', fontSize: 8 },
-                { text: 'MATTINO',     bold: true, alignment: 'center', fillColor: '#f3f4f6', fontSize: 8 },
-                { text: 'POMERIGGIO',  bold: true, alignment: 'center', fillColor: '#f3f4f6', fontSize: 8 },
-                { text: 'NOTTE',       bold: true, alignment: 'center', fillColor: '#f3f4f6', fontSize: 8 },
-                { text: 'Firma\nStudente',   bold: true, alignment: 'center', fillColor: '#f3f4f6', fontSize: 7 },
-                { text: 'Firma\nInfermiere', bold: true, alignment: 'center', fillColor: '#f3f4f6', fontSize: 7 },
-            ]];
+            // Layout originale: 2 colonne affiancate.
+            // Almeno 62 righe totali (come da modulo ufficiale), divise 50/50.
+            const totalRows = Math.max(62, workedRows.length % 2 === 0 ? workedRows.length : workedRows.length + 1);
+            const half = totalRows / 2;
 
-            // Righe dati (max 32, poi continua)
-            const totalRows = Math.max(32, workedRows.length);
-            for (let i = 0; i < totalRows; i++) {
+            const tHdr = [
+                { text: 'DATA',        bold:true, alignment:'center', fillColor:'#ececec', fontSize:6.5 },
+                { text: 'MATTINO',     bold:true, alignment:'center', fillColor:'#ececec', fontSize:6 },
+                { text: 'POMERIGGIO',  bold:true, alignment:'center', fillColor:'#ececec', fontSize:6 },
+                { text: 'NOTTE',       bold:true, alignment:'center', fillColor:'#ececec', fontSize:6 },
+                { text: 'Firma\nStudente',   bold:true, alignment:'center', fillColor:'#ececec', fontSize:5.5 },
+                { text: 'Firma\ninfermiere', bold:true, alignment:'center', fillColor:'#ececec', fontSize:5.5 },
+            ];
+
+            function buildRow(i) {
                 if (i < workedRows.length) {
-                    const { ds, dObj, code, sh, tutor } = workedRows[i];
-                    const timeStr = (sh && sh.start && sh.end) ? `${sh.start}-${sh.end}` : '';
-                    const upper = code.toUpperCase();
-                    const isM = upper.startsWith('M') || upper.startsWith('L');
-                    const isP = upper.startsWith('P');
-                    const isN = upper === 'N';
-                    tableBody.push([
-                        { text: (i+1).toString(), alignment: 'center', fontSize: 8 },
-                        { text: formatDateIT(ds), alignment: 'center', fontSize: 8 },
-                        { text: isM ? timeStr : '', alignment: 'center', fontSize: 7 },
-                        { text: isP ? timeStr : '', alignment: 'center', fontSize: 7 },
-                        { text: isN ? timeStr : '', alignment: 'center', fontSize: 7 },
-                        { text: '', alignment: 'center', fontSize: 8 },
-                        { text: '', alignment: 'center', fontSize: 8 },
-                    ]);
-                } else {
-                    tableBody.push([
-                        { text: (i+1).toString(), alignment: 'center', fontSize: 8, color: '#aaa' },
-                        { text: '___/___/___', alignment: 'center', fontSize: 8, color: '#ccc' },
-                        { text: '', fontSize: 8 }, { text: '', fontSize: 8 }, { text: '', fontSize: 8 },
-                        { text: '', fontSize: 8 }, { text: '', fontSize: 8 },
-                    ]);
+                    const { ds, code, sh } = workedRows[i];
+                    const t = (sh && sh.start && sh.end) ? `${sh.start}-${sh.end}` : '';
+                    const u = code.toUpperCase();
+                    const isM = u.startsWith('M') || u.startsWith('L');
+                    const isP = u.startsWith('P');
+                    const isN = u === 'N';
+                    return [
+                        { text: `${i+1}. ${formatDateIT(ds)}`, fontSize:7 },
+                        { text: isM ? t : '', alignment:'center', fontSize:6.5 },
+                        { text: isP ? t : '', alignment:'center', fontSize:6.5 },
+                        { text: isN ? t : '', alignment:'center', fontSize:6.5 },
+                        { text: '', fontSize:7 },
+                        { text: '', fontSize:7 },
+                    ];
                 }
+                return [
+                    { text: `${i+1}. ___/___/___`, fontSize:7, color:'#bbb' },
+                    {text:'',fontSize:7},{text:'',fontSize:7},{text:'',fontSize:7},{text:'',fontSize:7},{text:'',fontSize:7}
+                ];
             }
+
+            const leftBody  = [tHdr]; for(let i=0;    i<half;      i++) leftBody.push(buildRow(i));
+            const rightBody = [tHdr]; for(let i=half; i<totalRows; i++) rightBody.push(buildRow(i));
+
+            const tLayout = {
+                hLineWidth:()=>0.35, vLineWidth:()=>0.35,
+                hLineColor:()=>'#999', vLineColor:()=>'#999',
+                paddingLeft:()=>2, paddingRight:()=>2, paddingTop:()=>2, paddingBottom:()=>2,
+            };
+            // Larghezze colonne: DATA(+num) | M | P | N | FirmaS | FirmaI — somma ~256pt per metà
+            const cw = [52, 38, 38, 32, 46, 46];
 
             const totalMins = calculateTotalPeriodMinutes();
             const th = Math.floor(totalMins/60), tm = totalMins%60;
@@ -895,97 +902,59 @@
 
             const cfg = appState.config;
             const studentName = document.getElementById('userDisplayName').textContent;
-            const matricola = document.getElementById('userMatricola').textContent;
+            const matricola   = document.getElementById('userMatricola').textContent;
 
-            // Costruisci intestazione con loghi
-            const headerCols = [];
-            if (cfg.logoUnibo) {
-                headerCols.push({ image: cfg.logoUnibo, width: 65, alignment: 'left', margin: [0,0,0,0] });
-            } else {
-                headerCols.push({ stack: [
-                    { text: 'ALMA MATER STUDIORUM', fontSize: 9, bold: true, color: '#8B0000' },
-                    { text: 'UNIVERSITÀ DI BOLOGNA', fontSize: 8, color: '#8B0000' }
-                ], alignment: 'left', margin: [0,4,0,0] });
-            }
-            headerCols.push({ text: '', width: '*' });
-            if (cfg.logoAusl) {
-                headerCols.push({ image: cfg.logoAusl, width: 100, alignment: 'right', margin: [0,0,0,0] });
-            } else {
-                headerCols.push({ stack: [
-                    { text: 'SERVIZIO SANITARIO REGIONALE', fontSize: 7, bold: true, color: '#006633' },
-                    { text: 'EMILIA-ROMAGNA', fontSize: 7, color: '#006633' },
-                    { text: 'Azienda Unità Sanitaria Locale della Romagna', fontSize: 6, color: '#444' }
-                ], alignment: 'right', margin: [0,4,0,0] });
-            }
+            // Loghi
+            const hdrLeft  = cfg.logoUnibo
+                ? { image: cfg.logoUnibo, width: 65, margin:[0,0,0,0] }
+                : { stack:[{text:'ALMA MATER STUDIORUM',fontSize:8,bold:true,color:'#8B0000'},{text:'UNIVERSITÀ DI BOLOGNA',fontSize:7,color:'#8B0000'}], margin:[0,3,0,0] };
+            const hdrRight = cfg.logoAusl
+                ? { image: cfg.logoAusl, width: 105, margin:[0,0,0,0], alignment:'right' }
+                : { stack:[{text:'SERVIZIO SANITARIO REGIONALE',fontSize:6.5,bold:true,color:'#006633'},{text:'EMILIA-ROMAGNA',fontSize:6.5,color:'#006633'},{text:'Azienda Unità Sanitaria Locale della Romagna',fontSize:6,color:'#444'}], alignment:'right', margin:[0,3,0,0] };
 
-            const docDef = {
-                pageSize: 'A4',
-                pageMargins: [35, 28, 30, 35],
-                content: [
-                    // Loghi
-                    { columns: headerCols, margin: [0,0,0,6] },
-                    { canvas: [{ type: 'line', x1:0, y1:0, x2:530, y2:0, lineWidth:1, lineColor:'#555' }] },
-                    { text: ' ', fontSize: 4 },
-                    // Intestazione documento
-                    { text: 'CAMPUS DI RAVENNA', fontSize: 11, bold: true, alignment: 'center', margin: [0,4,0,0] },
-                    { text: 'SCUOLA DI MEDICINA E CHIRURGIA', fontSize: 10, alignment: 'center' },
-                    { text: 'CORSO DI LAUREA IN INFERMIERISTICA', fontSize: 10, alignment: 'center' },
-                    { text: 'SEZIONE FORMATIVA DI FAENZA', fontSize: 9, alignment: 'center', color: '#555' },
-                    { text: ' ', fontSize: 4 },
-                    { text: 'PRESENZE GIORNALIERE IN TIROCINIO CLINICO', fontSize: 13, bold: true, alignment: 'center', decoration: 'underline', margin: [0,4,0,8] },
-                    // Dati studente
-                    { text: [
-                        { text: `${cfg.courseYear || '___'}`, bold: true, fontSize: 12 },
-                        { text: `° Anno di Corso  –  A.A. `, fontSize: 10 },
-                        { text: cfg.academicYear || '___/___', bold: true, fontSize: 10 },
-                    ], margin: [0,0,0,4] },
-                    { columns: [
-                        { text: 'Studente ', fontSize: 10, width: 'auto' },
-                        { text: studentName + (matricola && matricola !== '...' ? `  (matr. ${matricola})` : ''), fontSize: 10, bold: true, decoration: 'underline', width: '*' }
-                    ], margin: [0,0,0,3] },
-                    { text: [
-                        { text: 'Sede di Tirocinio  ', fontSize: 10 },
-                        { text: cfg.reparto || '______________________________________', fontSize: 10, bold: true, decoration: 'underline' }
-                    ], margin: [0,0,0,3] },
-                    { text: [
-                        { text: 'Numero ore di frequenza programmata: ', fontSize: 10 },
-                        { text: String(cfg.targetHours || '____'), fontSize: 10, bold: true },
-                        { text: ' ore', fontSize: 10 }
-                    ], margin: [0,0,0,8] },
-                    // Tabella presenze
-                    {
-                        table: {
-                            headerRows: 1,
-                            widths: [18, 52, 82, 82, 72, 72, 'auto'],
-                            body: tableBody
-                        },
-                        layout: {
-                            hLineWidth: () => 0.4,
-                            vLineWidth: () => 0.4,
-                            hLineColor: () => '#999',
-                            vLineColor: () => '#999',
-                            paddingLeft: () => 3,
-                            paddingRight: () => 3,
-                            paddingTop: () => 3,
-                            paddingBottom: () => 3,
-                        }
-                    },
-                    // Footer
-                    { text: ' ', fontSize: 6, margin: [0,6,0,0] },
-                    { text: [
-                        { text: 'Numero effettivo di ore frequentate: ', fontSize: 10 },
-                        { text: totalStr, fontSize: 11, bold: true }
-                    ], margin: [0,4,0,8] },
-                    { canvas: [{ type: 'line', x1:0, y1:0, x2:530, y2:0, lineWidth:0.5, lineColor:'#aaa' }] },
-                    { columns: [
-                        { text: [{ text: 'DATA  ', fontSize: 9 }, { text: '___/___/___', fontSize: 9 }], width: 140 },
-                        { text: 'Firma del coordinatore didattico della sede formativa', fontSize: 9, alignment: 'right', italics: true }
-                    ], margin: [0,8,0,0] },
+            pdfMake.createPdf({
+                pageSize:'A4',
+                pageMargins:[30,24,28,28],
+                content:[
+                    // ── Loghi ──
+                    { columns:[ hdrLeft, {text:'',width:'*'}, hdrRight ], margin:[0,0,0,5] },
+                    { canvas:[{type:'line',x1:0,y1:0,x2:537,y2:0,lineWidth:0.8,lineColor:'#333'}] },
+                    // ── Titolo ──
+                    { text:'CAMPUS DI RAVENNA', fontSize:11, bold:true, alignment:'center', margin:[0,4,0,0] },
+                    { text:'CORSO DI LAUREA IN INFERMIERISTICA', fontSize:9.5, alignment:'center' },
+                    { text:'SEZIONE FORMATIVA DI FAENZA', fontSize:9, alignment:'center', color:'#444' },
+                    { text:'DOSSIER DI TIROCINIO  DOCUMENTO D', fontSize:10, bold:true, alignment:'center', margin:[0,3,0,0] },
+                    { text:'SCHEDA PRESENZE GIORNALIERE', fontSize:13, bold:true, alignment:'center', decoration:'underline', margin:[0,2,0,4] },
+                    // ── Istruzioni ──
+                    { text:'Indicazioni per il suo utilizzo:', fontSize:7, italics:true, margin:[0,1,0,1] },
+                    { text:'a)  Nelle strutture sprovviste di marcatempo AUSL Romagna', fontSize:7, italics:true, margin:[6,0,0,1] },
+                    { text:'b)  Nel caso di omessa timbratura nel marcatempo AUSL Romagna. In questo caso lo studente deve inserire nel giorno stesso o al massimo il giorno dopo l\'orario che dovrà essere controfirmato dal tutor clinico o dal Coordinatore di U.O./servizio)', fontSize:7, italics:true, margin:[6,0,0,5] },
+                    { canvas:[{type:'line',x1:0,y1:0,x2:537,y2:0,lineWidth:0.3,lineColor:'#aaa'}] },
+                    // ── Dati studente ──
+                    { text:[{text:`${cfg.courseYear||'___'}`,bold:true,fontSize:10},{text:' Anno di Corso     A.A. ',fontSize:9},{text:cfg.academicYear||'20__/___',fontSize:9,bold:true}], margin:[0,3,0,2] },
+                    { text:[{text:'Studente  ',fontSize:9},{text:studentName+(matricola&&matricola!=='...'?`  (matr. ${matricola})`:''),fontSize:9,bold:true,decoration:'underline'}], margin:[0,0,0,2] },
+                    { text:[{text:'Sede di Tirocinio  ',fontSize:9},{text:cfg.reparto||'_______________________________',fontSize:9,bold:true,decoration:'underline'}], margin:[0,0,0,2] },
+                    { text:[{text:'Numero ore di frequenza programmata:  ',fontSize:9},{text:String(cfg.targetHours||'____'),fontSize:9,bold:true},{text:' ore',fontSize:9}], margin:[0,0,0,5] },
+                    // ── Tabella 2 colonne ──
+                    { columns:[
+                        { width:'*',  table:{headerRows:1, widths:cw, body:leftBody},  layout:tLayout },
+                        { width:5, text:'' },
+                        { width:'*',  table:{headerRows:1, widths:cw, body:rightBody}, layout:tLayout },
+                    ]},
+                    // ── Footer ──
+                    { text:[{text:'Numero effettivo di ore frequentate:  ',fontSize:9},{text:totalStr,fontSize:10,bold:true},{text:'  ore',fontSize:9}], margin:[0,6,0,4] },
+                    { canvas:[{type:'line',x1:0,y1:0,x2:537,y2:0,lineWidth:0.3,lineColor:'#aaa'}] },
+                    { columns:[
+                        { text:[{text:'DATA',fontSize:9},{text:'___/___/___/',fontSize:9}], width:140 },
+                        { text:'Firma del coordinatore didattico della sede formativa', fontSize:9, alignment:'right' }
+                    ], margin:[0,5,0,2] },
+                    { canvas:[{type:'line',x1:250,y1:0,x2:537,y2:0,lineWidth:0.5,lineColor:'#555'}] },
+                    { canvas:[{type:'line',x1:0,y1:0,x2:537,y2:0,lineWidth:0.2,lineColor:'#ccc'}], margin:[0,10,0,0] },
+                    { text:'Via San Giovanni Bosco 1 – Complesso ex Salesiani  Faenza 48018 (Ra)', fontSize:6.5, alignment:'center', margin:[0,3,0,1] },
+                    { text:'Punto informativo tel. 0546 692914 – Fax 0546 692930', fontSize:6.5, alignment:'center' },
                 ],
-                defaultStyle: { font: 'Roboto' }
-            };
-
-            pdfMake.createPdf(docDef).open();
+                defaultStyle:{ font:'Roboto' }
+            }).open();
         }
 
         function handleCSVUpload(event) {

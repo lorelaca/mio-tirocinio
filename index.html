@@ -1124,8 +1124,10 @@
                 const aaParts = (cfg.academicYear || '').split(/[\/\-]/);
                 const year1 = xe((aaParts[0] || '____').trim());
                 const year2 = xe((aaParts[1] || '____').trim());
+                console.log('[AA DEBUG] academicYear:', cfg.academicYear, '→ year1:', year1, 'year2:', year2);
                 const foundYears = [...xmlStr.matchAll(/<w:t>(20\d\d)<\/w:t>/g)].map(m=>m[1]);
                 const uniqueYears = [...new Set(foundYears)];
+                console.log('[AA DEBUG] foundYears:', foundYears, 'unique:', uniqueYears);
                 if(uniqueYears.length >= 2) {
                     // Two-phase replacement to avoid collisions when years overlap
                     xmlStr = xmlStr.replaceAll(`<w:t>${uniqueYears[0]}</w:t>`, '<w:t>__AA_YEAR1__</w:t>');

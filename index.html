@@ -658,7 +658,32 @@
         function loadPeriod(id){
             const e=appState.history.find(x=>x.id===id);
             if(!e)return;
-            if(!confirm("Caricare questo periodo? I dati attuali non salvati andranno persi."))return;
+            if(!confirm("Caricare questo periodo? I dati attuali verranno salvati automaticamente in history prima di procedere."))return;
+            // Auto-save current state to history before overwriting
+            const curScheduleSize=Object.keys(appState.schedule||{}).length;
+            if(curScheduleSize>0){
+                const tm=calculateTotalPeriodMinutes();
+                const tgt=(appState.config.targetHours||0)*60;
+                const leg=appState.config.legacyBalance||0;
+                const bal=(tm+leg)-tgt;
+                const autoEntry={
+                    id:Date.now(),
+                    period:`${appState.config.startDate} / ${appState.config.endDate}`,
+                    reparto:appState.config.reparto,
+                    target:appState.config.targetHours,
+                    done:(tm/60).toFixed(2),
+                    balance:bal,
+                    schedule:JSON.parse(JSON.stringify(appState.schedule)),
+                    tutors:JSON.parse(JSON.stringify(appState.tutors||{})),
+                    configSnapshot:{...appState.config, name:(appState.config.name||'Periodo')+' [auto]'},
+                    shiftsDefinitions:JSON.parse(JSON.stringify(appState.shiftsDefinitions)),
+                    shiftOverrides:JSON.parse(JSON.stringify(appState.shiftOverrides||{}))
+                };
+                // Replace existing entry for same period if present, otherwise push
+                const existIdx=appState.history.findIndex(h=>h.period===autoEntry.period&&(h.configSnapshot&&h.configSnapshot.name||'').endsWith('[auto]'));
+                if(existIdx!==-1) appState.history.splice(existIdx,1,autoEntry);
+                else appState.history.push(autoEntry);
+            }
             appState.schedule={...e.schedule};
             appState.tutors={...e.tutors};
             if(e.configSnapshot){appState.config={...e.configSnapshot};}else{appState.config.reparto=e.reparto;appState.config.targetHours=e.target;}

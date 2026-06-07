@@ -104,22 +104,22 @@
                     <span class="text-xs text-gray-500 block font-mono" id="userMatricola">...</span>
                 </div>
             </div>
-            <div class="flex gap-2 flex-wrap justify-center mt-3 xl:mt-0">
-                <div class="flex bg-gray-100 rounded-lg p-1">
-                    <button onclick="openHistoryModal()" class="px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:bg-white hover:shadow-sm"><i class="fa-solid fa-folder-open mr-2 text-blue-600"></i>Periodi</button>
-                    <button onclick="openRettificheModal()" class="px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:bg-white hover:shadow-sm"><i class="fa-solid fa-scale-balanced mr-2 text-purple-600"></i>Rettifiche</button>
+            <div class="flex gap-1.5 flex-nowrap items-center overflow-x-auto mt-3 xl:mt-0 pb-0.5">
+                <div class="flex bg-gray-100 rounded-lg p-1 shrink-0">
+                    <button onclick="openHistoryModal()" class="px-2.5 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:bg-white hover:shadow-sm whitespace-nowrap"><i class="fa-solid fa-layer-group mr-1.5 text-blue-600"></i>Periodi</button>
+                    <button onclick="openRettificheModal()" class="px-2.5 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:bg-white hover:shadow-sm whitespace-nowrap"><i class="fa-solid fa-scale-balanced mr-1.5 text-purple-600"></i>Rettifiche</button>
                 </div>
-                <div class="w-px h-8 bg-gray-200 mx-1 hidden md:block"></div>
-                <button onclick="openSequenceModal()" class="bg-white border border-gray-200 text-purple-700 hover:bg-purple-50 px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition"><i class="fa-solid fa-layer-group mr-2"></i>Sequenza</button>
-                <button onclick="openSettingsModal()" class="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium shadow-sm"><i class="fa-solid fa-cog mr-2"></i>Config.</button>
-                <button onclick="openShiftsModal()" class="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium shadow-sm"><i class="fa-solid fa-clock mr-2"></i>Matrice</button>
-                <button onclick="openFerieModal()" class="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium shadow-sm"><i class="fa-solid fa-umbrella-beach mr-2 text-yellow-500"></i>Ferie</button>
-                <div class="w-px h-8 bg-gray-200 mx-1 hidden md:block"></div>
-                <button onclick="openSimulationModal()" class="bg-indigo-50 border border-indigo-100 text-indigo-700 hover:bg-indigo-100 px-4 py-2 rounded-lg text-sm font-bold shadow-sm"><i class="fa-solid fa-flag-checkered mr-2"></i>Chiusura</button>
-                <button onclick="generatePDF()" class="bg-red-50 border border-red-100 text-red-700 hover:bg-red-100 px-4 py-2 rounded-lg text-sm font-bold shadow-sm"><i class="fa-solid fa-file-pdf mr-2"></i>Stampa</button>
-                <button onclick="openCartellinoModal()" class="bg-teal-600 text-white hover:bg-teal-700 px-4 py-2 rounded-lg text-sm font-bold shadow-sm shadow-teal-200"><i class="fa-solid fa-file-word mr-2"></i>Cartellino .docx</button>
-                <button onclick="saveData()" id="saveBtn" class="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded-lg text-sm font-bold shadow-sm shadow-green-200 flex items-center gap-2"><i class="fa-solid fa-save"></i> Salva Tutto</button>
-                <button onclick="handleLogout()" class="ml-2 text-gray-400 hover:text-red-500 px-3 transition" title="Esci"><i class="fa-solid fa-power-off"></i></button>
+                <div class="w-px h-6 bg-gray-200 shrink-0"></div>
+                <button onclick="openSequenceModal()" class="bg-white border border-gray-200 text-purple-700 hover:bg-purple-50 px-2.5 py-1.5 rounded-lg text-sm font-medium shadow-sm shrink-0 whitespace-nowrap"><i class="fa-solid fa-layer-group mr-1.5"></i>Sequenza</button>
+                <button onclick="openSettingsModal()" class="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-2.5 py-1.5 rounded-lg text-sm font-medium shadow-sm shrink-0 whitespace-nowrap"><i class="fa-solid fa-cog mr-1.5"></i>Config.</button>
+                <button onclick="openShiftsModal()" title="Matrice Turni" class="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-2.5 py-1.5 rounded-lg text-sm font-medium shadow-sm shrink-0"><i class="fa-solid fa-clock"></i></button>
+                <button onclick="openFerieModal()" title="Ferie e Festività" class="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-2.5 py-1.5 rounded-lg text-sm font-medium shadow-sm shrink-0"><i class="fa-solid fa-umbrella-beach text-yellow-500"></i></button>
+                <div class="w-px h-6 bg-gray-200 shrink-0"></div>
+                <button onclick="openSimulationModal()" class="bg-indigo-50 border border-indigo-100 text-indigo-700 hover:bg-indigo-100 px-2.5 py-1.5 rounded-lg text-sm font-bold shadow-sm shrink-0 whitespace-nowrap"><i class="fa-solid fa-flag-checkered mr-1.5"></i>Chiusura</button>
+                <button onclick="generatePDF()" title="Stampa PDF" class="bg-red-50 border border-red-100 text-red-700 hover:bg-red-100 px-2.5 py-1.5 rounded-lg text-sm font-bold shadow-sm shrink-0"><i class="fa-solid fa-file-pdf"></i></button>
+                <button onclick="openCartellinoModal()" class="bg-teal-600 text-white hover:bg-teal-700 px-2.5 py-1.5 rounded-lg text-sm font-bold shadow-sm shadow-teal-200 shrink-0 whitespace-nowrap"><i class="fa-solid fa-file-word mr-1.5"></i>Cartellino</button>
+                <button onclick="saveData()" id="saveBtn" class="bg-green-600 text-white hover:bg-green-700 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm shadow-green-200 flex items-center gap-1.5 shrink-0 whitespace-nowrap"><i class="fa-solid fa-save"></i>Salva Tutto</button>
+                <button onclick="handleLogout()" title="Esci" class="ml-1 text-gray-400 hover:text-red-500 px-2 py-1.5 shrink-0 transition"><i class="fa-solid fa-power-off"></i></button>
             </div>
         </nav>
 

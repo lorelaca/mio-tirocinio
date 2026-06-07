@@ -199,13 +199,26 @@
     <!-- Settings Modal -->
     <div id="settingsModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
       <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 animate-scale-in max-h-[90vh] overflow-y-auto text-sm">
-        <h3 class="text-xl font-bold mb-6 text-gray-800 border-b pb-2">Configurazione Periodo</h3>
-        <div class="mb-4"><label class="font-bold text-xs text-gray-500 uppercase">Nome Periodo (Opzionale)</label><input type="text" id="settingName" class="input-modern mt-1" placeholder="Es. Tirocinio 2° Anno"></div>
+        <h3 class="text-xl font-bold mb-5 text-gray-800 border-b pb-2">Configurazione</h3>
+        <!-- PROFILO STUDENTE -->
+        <div class="border-b pb-4 mb-4">
+          <h4 class="font-bold text-xs text-blue-700 uppercase tracking-wider mb-3 flex items-center gap-2"><i class="fa-solid fa-user-graduate"></i> Profilo Studente</h4>
+          <div class="grid grid-cols-2 gap-4">
+            <div><label class="font-bold text-xs text-gray-500 uppercase">Nome e Cognome</label><input type="text" id="settingStudentName" class="input-modern mt-1" placeholder="Es. Lorenzo La Cara"></div>
+            <div><label class="font-bold text-xs text-gray-500 uppercase">Matricola</label><input type="text" id="settingMatricola" class="input-modern mt-1" placeholder="Es. 1142316"></div>
+          </div>
+        </div>
+        <!-- PERIODO -->
+        <div class="mb-4"><label class="font-bold text-xs text-gray-500 uppercase">Nome Periodo</label><input type="text" id="settingName" class="input-modern mt-1" placeholder="Es. Montecatone"></div>
         <div class="grid grid-cols-2 gap-4 mb-4"><div><label class="font-bold text-xs text-gray-500 uppercase">Inizio</label><input type="date" id="settingStart" class="input-modern mt-1"></div><div><label class="font-bold text-xs text-gray-500 uppercase">Fine</label><input type="date" id="settingEnd" class="input-modern mt-1"></div></div>
         <div class="mb-4"><label class="font-bold text-xs text-gray-500 uppercase">Reparto</label><input type="text" id="settingReparto" class="input-modern mt-1"></div>
         <div class="mb-4"><label class="font-bold text-xs text-gray-500 uppercase">Coordinatore</label><input type="text" id="settingCoord" class="input-modern mt-1"></div>
-        <div class="mb-4"><label class="font-bold text-xs text-gray-500 uppercase">Target (h)</label><input type="number" id="settingTarget" class="input-modern mt-1"></div>
-        <div class="mb-4 border-t pt-4"><label class="font-bold text-xs text-gray-500 uppercase">Riporto Ore</label><input type="number" id="settingLegacy" class="input-modern mt-1"></div>
+        <div class="mb-4"><label class="font-bold text-xs text-gray-500 uppercase">Target (ore)</label><input type="number" id="settingTarget" class="input-modern mt-1"></div>
+        <div class="mb-4 border-t pt-4">
+          <label class="font-bold text-xs text-gray-500 uppercase">Riporto da periodo precedente (ore)</label>
+          <input type="number" step="0.5" id="settingLegacy" class="input-modern mt-1" placeholder="Es. 10 oppure -5">
+          <p class="text-xs text-gray-400 mt-1">Positivo = bonus da portare avanti · Negativo = ore da recuperare</p>
+        </div>
         <!-- CARTELLINO UFFICIALE SECTION -->
         <div class="border-t pt-4 mb-6">
           <h4 class="font-bold text-xs text-green-700 uppercase tracking-wider mb-3 flex items-center gap-2"><i class="fa-solid fa-id-card"></i> Dati Cartellino Ufficiale</h4>
@@ -554,24 +567,36 @@
         function handleWeekAction(s){const so=getSafeDate(s); const w=getWeekNumber(so); if(!copySourceWeek){copySourceWeek=w;window.copyBuf=[];const dt=getSafeDate(s);for(let i=0;i<7;i++){window.copyBuf.push(appState.schedule[getDateStr(dt)]||'');dt.setDate(dt.getDate()+1);}document.getElementById('copyPasteToolbar').classList.remove('hidden');document.getElementById('copySourceWeek').textContent="W"+w;renderCalendar();}else{if(w===copySourceWeek)return;const dt=getSafeDate(s);window.copyBuf.forEach(c=>{const ds=getDateStr(dt);if(c){appState.schedule[ds]=c;const sh=getShiftInfo(c);if(sh&&isOvernight(sh)){const nd=new Date(dt);nd.setDate(nd.getDate()+1);const nds=getDateStr(nd);if(nds<=appState.config.endDate)appState.schedule[nds]='/';}}else delete appState.schedule[ds];dt.setDate(dt.getDate()+1);});cancelCopy();}}
         function cancelCopy(){copySourceWeek=null;document.getElementById('copyPasteToolbar').classList.add('hidden');renderCalendar();}
         function openSettingsModal(){
+            const curName=document.getElementById('userDisplayName').textContent||'';
+            const curMatricola=document.getElementById('userMatricola').textContent||'';
+            document.getElementById('settingStudentName').value=curName==='Studente'?'':curName;
+            document.getElementById('settingMatricola').value=curMatricola==='...'?'':curMatricola;
             document.getElementById('settingStart').value=appState.config.startDate;
             document.getElementById('settingEnd').value=appState.config.endDate;
             document.getElementById('settingTarget').value=appState.config.targetHours;
             document.getElementById('settingReparto').value=appState.config.reparto;
             document.getElementById('settingCoord').value=appState.config.coordinatore;
-            document.getElementById('settingLegacy').value=appState.config.legacyBalance;
+            const legH=appState.config.legacyBalance?+(appState.config.legacyBalance/60).toFixed(2):0;
+            document.getElementById('settingLegacy').value=legH||'';
             document.getElementById('settingName').value=appState.config.name||'';
             document.getElementById('settingCourseYear').value=appState.config.courseYear||'III';
             document.getElementById('settingAcademicYear').value=appState.config.academicYear||'';
             document.getElementById('settingsModal').classList.remove('hidden');
         }
         function applySettings(){
+            const newName=document.getElementById('settingStudentName').value.trim();
+            const newMatricola=document.getElementById('settingMatricola').value.trim();
+            if(newName){
+                document.getElementById('userDisplayName').textContent=newName;
+                document.getElementById('userMatricola').textContent=newMatricola||'...';
+                if(!isOfflineMode&&currentUser) db.collection('users').doc(currentUser.uid).set({name:newName,matricola:newMatricola},{merge:true});
+            }
             appState.config.startDate=document.getElementById('settingStart').value;
             appState.config.endDate=document.getElementById('settingEnd').value;
-            appState.config.targetHours=document.getElementById('settingTarget').value;
+            appState.config.targetHours=parseFloat(document.getElementById('settingTarget').value)||0;
             appState.config.reparto=document.getElementById('settingReparto').value;
             appState.config.coordinatore=document.getElementById('settingCoord').value;
-            appState.config.legacyBalance=parseInt(document.getElementById('settingLegacy').value)||0;
+            appState.config.legacyBalance=Math.round((parseFloat(document.getElementById('settingLegacy').value)||0)*60);
             appState.config.name=document.getElementById('settingName').value;
             appState.config.courseYear=document.getElementById('settingCourseYear').value||'III';
             appState.config.academicYear=document.getElementById('settingAcademicYear').value||'';

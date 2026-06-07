@@ -1119,12 +1119,23 @@
 
                 // --- Riempi i campi dell'intestazione via sostituzione stringa (prima del DOMParser) ---
 
-                // Anno accademico: i due textbox posizionati contengono "2021" e "2022" come segnaposto
+                // Anno accademico: rileva i due anni segnaposto effettivamente presenti nel template
+                // (possono essere 2021/2022, 2025/2026, ecc.) e li sostituisce con quelli configurati
                 const aaParts = (cfg.academicYear || '').split(/[\/\-]/);
                 const year1 = xe((aaParts[0] || '____').trim());
                 const year2 = xe((aaParts[1] || '____').trim());
-                xmlStr = xmlStr.replaceAll('<w:t>2021</w:t>', `<w:t>${year1}</w:t>`);
-                xmlStr = xmlStr.replaceAll('<w:t>2022</w:t>', `<w:t>${year2}</w:t>`);
+                const foundYears = [...xmlStr.matchAll(/<w:t>(20\d\d)<\/w:t>/g)].map(m=>m[1]);
+                const uniqueYears = [...new Set(foundYears)];
+                if(uniqueYears.length >= 2) {
+                    // Two-phase replacement to avoid collisions when years overlap
+                    xmlStr = xmlStr.replaceAll(`<w:t>${uniqueYears[0]}</w:t>`, '<w:t>__AA_YEAR1__</w:t>');
+                    xmlStr = xmlStr.replaceAll(`<w:t>${uniqueYears[1]}</w:t>`, '<w:t>__AA_YEAR2__</w:t>');
+                    xmlStr = xmlStr.replaceAll('<w:t>__AA_YEAR1__</w:t>', `<w:t>${year1}</w:t>`);
+                    xmlStr = xmlStr.replaceAll('<w:t>__AA_YEAR2__</w:t>', `<w:t>${year2}</w:t>`);
+                } else {
+                    xmlStr = xmlStr.replaceAll('<w:t>2021</w:t>', `<w:t>${year1}</w:t>`);
+                    xmlStr = xmlStr.replaceAll('<w:t>2022</w:t>', `<w:t>${year2}</w:t>`);
+                }
 
                 // Anno di Corso: inserisce il valore nel campo sottolineato prima dell'etichetta "Anno di Corso"
                 if(cfg.courseYear) {
